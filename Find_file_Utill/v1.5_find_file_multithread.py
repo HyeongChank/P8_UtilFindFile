@@ -1,14 +1,23 @@
 import os
+import concurrent.futures
 import tkinter as tk
 import time
 
 def find_files(start_path, file_name_part):
     result = []
-    for dirpath, dirnames, filenames in os.walk(start_path):
-        for filename in filenames:
-            if file_name_part in filename:
-                result.append(os.path.join(dirpath, filename))
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        for dirpath, dirnames, filenames in os.walk(start_path):
+            futures = [executor.submit(check_filename, dirpath, filename, file_name_part) for filename in filenames]
+            for future in concurrent.futures.as_completed(futures):
+                file_path = future.result()
+                if file_path:
+                    result.append(file_path)
     return result
+
+def check_filename(dirpath, filename, file_name_part):
+    if file_name_part in filename:
+        return os.path.join(dirpath, filename)
+    return None
 
 def search():
     start_time = time.time()
@@ -23,7 +32,7 @@ def search():
     end_time = time.time()  # 검색 종료 시간 측정
     elapsed_time = end_time - start_time
     print(f"검색에 걸린 시간: {elapsed_time}초")
-    
+
     if filtered_file_paths:
         result_message = "\n".join(filtered_file_paths)
         text.insert(tk.END, f"파일 위치\n{result_message}")

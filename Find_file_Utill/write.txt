@@ -1,1 +1,1 @@
-pyinstaller --onefile delete_folder.py
+pyinstaller --onefile --noconsole v1.4_find_file_conditions.py
